@@ -1,5 +1,5 @@
 {
-  "name": "performance",
+  "name": "performance-collector",
   "version": "0.1.0",
   "description": "fe performance collector",
   "main": "lib/index.js",
