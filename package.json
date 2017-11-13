@@ -1,0 +1,26 @@
+{
+  "name": "performance",
+  "version": "0.1.0",
+  "description": "fe performance collector",
+  "main": "lib/index.js",
+  "scripts": {
+    "compile": "babel -d lib/ src/",
+    "prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "babel": "^4.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fulme/performance.git"
+  },
+  "keywords": [
+    "performance"
+  ],
+  "author": "fulme",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fulme/performance/issues"
+  },
+  "homepage": "https://github.com/fulme/performance#readme"
+}
