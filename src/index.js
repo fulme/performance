@@ -3,6 +3,7 @@
  */
 
 const START = Date.now();
+const CALLBACKS = [];
 const INDICATORS = {
   // DNS查询耗时
   dns: '',
@@ -33,6 +34,7 @@ function calcIndicators(cb) {
   if (timing) {
     const navigationStart = timing.navigationStart;
     const firstPaint = timing.msFirstPaint || timing.mozFirstPaintTime;
+    const loadEventEnd = timing.loadEventEnd || Date.now();
 
     if (firstPaint === 0) {
       // TODO nothing, IE9 bug
@@ -51,31 +53,50 @@ function calcIndicators(cb) {
     INDICATORS.tcp = timing.connectEnd - timing.connectStart;
     INDICATORS.ttfb = timing.responseStart - timing.requestStart;
     INDICATORS.domReady = timing.domContentLoadedEventEnd - navigationStart;
-    INDICATORS.load = timing.loadEventEnd - navigationStart;
+    INDICATORS.load = loadEventEnd - navigationStart;
   }
 
   cb(INDICATORS);
 }
 
-export default function(cb) {
+(() => {
   if (!window.addEventListener) {
     // TODO support IE8-
     return;
   }
 
+  let timer = null;
   const TIMEOUT = 1e4;
-  const timer = setTimeout(() => {
+
+  const doCallback = (indicators) => {
+    for (let i = 0; i < CALLBACKS.length; i += 1) {
+      CALLBACKS[i](indicators);
+    }
+  };
+
+  const onload = () => {
+    INDICATORS.load = Date.now() - START;
+    clearTimeout(timer);
+    calcIndicators(doCallback);
+  };
+
+  timer = setTimeout(() => {
     INDICATORS.load = TIMEOUT;
-  calcIndicators(cb);
-}, TIMEOUT);
+    window.removeEventListener('load', onload);
+    calcIndicators(doCallback);
+  }, TIMEOUT);
 
   window.addEventListener('DOMContentLoaded', () => {
     INDICATORS.domReady = Date.now() - START;
-}, false);
+  }, false);
 
-  window.addEventListener('load', () => {
-    INDICATORS.load = Date.now() - START;
-  clearTimeout(timer);
-  calcIndicators(cb);
-}, false);
+  window.addEventListener('load', onload, false);
+})();
+
+export default function(cb) {
+  if (INDICATORS.load > 0) {
+    cb(INDICATORS);
+  } else {
+    CALLBACKS.push(cb);
+  }
 }
